@@ -9,9 +9,7 @@
     "dev": "n8n start --tunnel",
     "healthcheck": "node healthcheck.js"
   },
-  "dependencies": {
-    "n8n": "^1.28.0"
-  },
+  "dependencies": {},
   "engines": {
     "node": ">=18.0.0"
   },
