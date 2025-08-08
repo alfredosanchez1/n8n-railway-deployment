@@ -22,6 +22,7 @@ En Railway, necesitas configurar las siguientes variables de entorno:
 - `N8N_DIAGNOSTICS_ENABLED=false` - Deshabilitar diagnósticos
 - `N8N_USER_MANAGEMENT_DISABLED=false` - Habilitar gestión de usuarios
 - `N8N_DISABLE_PRODUCTION_MAIN_PROCESS=false` - Para desarrollo
+- `N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false` - Deshabilitar verificación de permisos
 
 ## Pasos de Despliegue
 
