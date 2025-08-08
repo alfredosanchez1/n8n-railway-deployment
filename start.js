@@ -1,53 +1,38 @@
-const { spawn } = require('child_process');
-const http = require('http');
+const { exec } = require('child_process');
 
-console.log('🚀 Starting n8n...');
+console.log('🚀 Starting n8n on Railway...');
 
-// Start n8n process
-const n8nProcess = spawn('npx', ['n8n', 'start'], {
-  stdio: 'inherit',
+// Set the correct port for Railway
+process.env.N8N_PORT = process.env.PORT || 3000;
+process.env.N8N_HOST = '0.0.0.0';
+
+console.log(`📡 n8n will run on port: ${process.env.N8N_PORT}`);
+
+// Start n8n directly
+const n8nProcess = exec('npx n8n start', {
   env: { ...process.env }
 });
 
-// Simple healthcheck server
-const server = http.createServer((req, res) => {
-  if (req.url === '/healthz' || req.url === '/') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ 
-      status: 'ok', 
-      timestamp: new Date().toISOString(),
-      service: 'n8n'
-    }));
-  } else {
-    res.writeHead(404);
-    res.end('Not Found');
-  }
+n8nProcess.stdout.on('data', (data) => {
+  console.log(data.toString());
 });
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`✅ Healthcheck server running on port ${PORT}`);
+n8nProcess.stderr.on('data', (data) => {
+  console.error(data.toString());
+});
+
+n8nProcess.on('exit', (code) => {
+  console.log(`n8n process exited with code ${code}`);
+  process.exit(code);
 });
 
 // Handle process termination
 process.on('SIGTERM', () => {
   console.log('🛑 Received SIGTERM, shutting down...');
   n8nProcess.kill('SIGTERM');
-  server.close(() => {
-    process.exit(0);
-  });
 });
 
 process.on('SIGINT', () => {
   console.log('🛑 Received SIGINT, shutting down...');
   n8nProcess.kill('SIGINT');
-  server.close(() => {
-    process.exit(0);
-  });
-});
-
-// Handle n8n process exit
-n8nProcess.on('exit', (code) => {
-  console.log(`n8n process exited with code ${code}`);
-  process.exit(code);
 });
