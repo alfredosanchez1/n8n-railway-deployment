@@ -12,9 +12,10 @@ En Railway, necesitas configurar las siguientes variables de entorno:
 - `N8N_BASIC_AUTH_PASSWORD=tu_contraseña` - Contraseña para acceder a n8n
 - `N8N_ENCRYPTION_KEY=tu_clave_de_encriptacion` - Clave para encriptar datos (32 caracteres)
 - `N8N_HOST=tu-dominio.railway.app` - URL de tu aplicación Railway
-- `N8N_PORT=3000` - Puerto (Railway lo maneja automáticamente)
+- `N8N_PORT=5678` - Puerto interno de n8n (5678)
 - `N8N_PROTOCOL=https` - Protocolo HTTPS
 - `WEBHOOK_URL=https://tu-dominio.railway.app` - URL para webhooks
+- `N8N_RUNNERS_ENABLED=true` - Habilitar task runners (recomendado)
 
 ### Variables Opcionales:
 - `N8N_LOG_LEVEL=info` - Nivel de logging
@@ -64,4 +65,5 @@ Usa las credenciales que configuraste en las variables de entorno.
 - Railway proporciona HTTPS automáticamente
 - Los datos se almacenan en la base de datos temporal de Railway
 - Para persistencia de datos, considera usar una base de datos externa
-- El plan gratuito de Railway tiene limitaciones de uso 
+- El plan gratuito de Railway tiene limitaciones de uso
+- n8n se ejecuta internamente en el puerto 5678 
