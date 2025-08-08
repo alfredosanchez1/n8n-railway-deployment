@@ -1,4 +1,8 @@
+console.log('========================================');
 console.log('🚀 RAILWAY START SCRIPT EXECUTING...');
+console.log('🚀 RAILWAY START SCRIPT EXECUTING...');
+console.log('🚀 RAILWAY START SCRIPT EXECUTING...');
+console.log('========================================');
 
 const { spawn } = require('child_process');
 const http = require('http');

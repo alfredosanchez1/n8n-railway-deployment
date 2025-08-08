@@ -3,3 +3,12 @@ cmd = "node start.js"
 
 [variables]
 NODE_ENV = "production"
+
+[phases.setup]
+nixPkgs = ["nodejs", "npm"]
+
+[phases.install]
+cmds = ["npm ci --omit=dev"]
+
+[phases.build]
+cmds = ["npm run build"]

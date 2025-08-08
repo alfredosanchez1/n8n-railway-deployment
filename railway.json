@@ -4,6 +4,8 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "node start.js"
+    "startCommand": "node start.js",
+    "healthcheckPath": null,
+    "healthcheckTimeout": null
   }
 } 
