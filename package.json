@@ -10,8 +10,7 @@
     "healthcheck": "node healthcheck.js"
   },
   "dependencies": {
-    "n8n": "^1.28.0",
-    "http-proxy-middleware": "^2.0.6"
+    "n8n": "^1.28.0"
   },
   "engines": {
     "node": ">=18.0.0"
