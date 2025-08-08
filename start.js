@@ -39,7 +39,7 @@ process.env.N8N_HOST = '0.0.0.0';
 
 console.log('🚀 Starting n8n process...');
 
-const n8nProcess = spawn('npx', ['n8n', 'start'], {
+const n8nProcess = spawn('node', ['run-n8n.js'], {
   stdio: 'inherit',
   env: { ...process.env },
   detached: false

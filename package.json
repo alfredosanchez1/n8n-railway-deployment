@@ -17,5 +17,8 @@
   },
   "keywords": ["n8n", "automation", "workflow"],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "nixpacks": {
+    "start": "node start.js"
+  }
 } 
