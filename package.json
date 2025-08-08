@@ -1,21 +1,19 @@
 {
-  "name": "railway-app",
+  "name": "n8n-render",
   "version": "1.0.0",
-  "description": "Railway app deployment",
-  "main": "start.js",
+  "description": "n8n deployment on Render",
+  "main": "server.js",
   "scripts": {
-    "start": "node start.js",
-    "build": "echo 'Build completed'",
-    "dev": "node start.js"
+    "start": "node server.js",
+    "build": "echo 'Build completed'"
   },
-  "dependencies": {},
+  "dependencies": {
+    "n8n": "^1.28.0"
+  },
   "engines": {
     "node": ">=18.0.0"
   },
-  "keywords": ["railway", "deployment"],
+  "keywords": ["n8n", "automation", "workflow"],
   "author": "",
-  "license": "MIT",
-  "nixpacks": {
-    "start": "node start.js"
-  }
+  "license": "MIT"
 } 

@@ -1,6 +1,6 @@
-# n8n Railway Deployment
+# n8n Render Deployment
 
-Este proyecto contiene la configuración necesaria para desplegar n8n en Railway.
+Este proyecto contiene la configuración necesaria para desplegar n8n en Render.
 
 ## Variables de Entorno Requeridas
 
