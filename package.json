@@ -2,9 +2,9 @@
   "name": "n8n-railway",
   "version": "1.0.0",
   "description": "n8n deployment on Railway",
-  "main": "index.js",
+  "main": "start.js",
   "scripts": {
-    "start": "n8n start",
+    "start": "node start.js",
     "build": "echo 'No build step required'",
     "dev": "n8n start --tunnel",
     "healthcheck": "node healthcheck.js"
