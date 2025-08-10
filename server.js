@@ -1,8 +1,13 @@
 const { exec, spawn } = require('child_process');
 const http = require('http');
 
-// Forzar IPv4 para evitar problemas de conexión
+// Forzar IPv4 más agresivamente para evitar problemas de conexión
 process.env.NODE_OPTIONS = '--dns-result-order=ipv4first';
+process.env.NODE_NO_WARNINGS = '1';
+
+// Variables específicas para forzar IPv4 en conexiones de base de datos
+process.env.PGSSLMODE = 'require';
+process.env.PGAPPNAME = 'n8n-render';
 
 const PORT = process.env.PORT || 10000;
 process.env.N8N_PORT = PORT;
@@ -15,10 +20,12 @@ console.log('🔧 Environment configured for Render');
 console.log('🌐 DATABASE_URL:', process.env.DATABASE_URL);
 console.log('🔑 N8N_ENCRYPTION_KEY:', process.env.N8N_ENCRYPTION_KEY ? '✅ Set' : '❌ Missing');
 console.log('🌍 NODE_OPTIONS:', process.env.NODE_OPTIONS);
+console.log('🔒 PGSSLMODE:', process.env.PGSSLMODE);
 
-// Forzar configuración de red IPv4
+// Forzar configuración de red IPv4 y base de datos
 process.env.N8N_DISABLE_PRODUCTION_MAIN_PROCESS = 'false';
 process.env.N8N_LOG_LEVEL = 'debug';
+process.env.N8N_DATABASE_TYPE = 'postgresdb';
 
 // Crear servidor HTTP simple para mantener el proceso activo
 const server = http.createServer((req, res) => {
@@ -30,7 +37,9 @@ const server = http.createServer((req, res) => {
       status: 'ok', 
       service: 'n8n', 
       timestamp: new Date().toISOString(),
-      port: PORT
+      port: PORT,
+      database: 'railway',
+      ipv4_forced: true
     }));
   } else {
     res.writeHead(404, { 'Content-Type': 'text/plain' });
@@ -43,10 +52,20 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ HTTP server listening on port ${PORT}`);
   console.log('✅ n8n process starting...');
   
-  // Iniciar n8n en background
+  // Iniciar n8n en background con configuración IPv4 forzada
   const n8nProcess = spawn('npx', ['n8n', 'start'], {
     stdio: 'inherit',
-    env: { ...process.env }
+    env: { 
+      ...process.env,
+      // Forzar IPv4 en el proceso hijo
+      NODE_OPTIONS: '--dns-result-order=ipv4first --max-old-space-size=4096',
+      // Variables específicas de PostgreSQL
+      PGHOST: process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).hostname : undefined,
+      PGPORT: process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).port : undefined,
+      PGUSER: process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).username : undefined,
+      PGPASSWORD: process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).password : undefined,
+      PGDATABASE: process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).pathname.slice(1) : undefined
+    }
   });
   
   // Manejar eventos del proceso n8n
