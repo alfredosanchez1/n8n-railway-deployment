@@ -1,43 +1,27 @@
-const { spawn } = require('child_process');
-const http = require('http');
+const { exec } = require('child_process');
 
-console.log('🚀 RENDER: Starting n8n server...');
+// Forzar IPv4 para evitar problemas de conexión
+process.env.NODE_OPTIONS = '--dns-result-order=ipv4first';
 
-const PORT = process.env.PORT || 3000;
-
-// Configure n8n environment variables
+const PORT = process.env.PORT || 10000;
 process.env.N8N_PORT = PORT;
 process.env.N8N_HOST = '0.0.0.0';
-process.env.N8N_PROTOCOL = 'https';
 
-console.log(`📡 Server will run on port: ${PORT}`);
-console.log(`🔧 Environment configured for Render`);
+// Agregar logging extensivo para debug
+console.log('🚀 RENDER: Starting n8n server...');
+console.log('📡 Server will run on port:', PORT);
+console.log('🔧 Environment configured for Render');
+console.log('🌐 DATABASE_URL:', process.env.DATABASE_URL);
+console.log('🔑 N8N_ENCRYPTION_KEY:', process.env.N8N_ENCRYPTION_KEY ? '✅ Set' : '❌ Missing');
+console.log('🌍 NODE_OPTIONS:', process.env.NODE_OPTIONS);
 
-// Start n8n directly on the Render port
-const n8nProcess = spawn('npx', ['n8n', 'start'], {
-  stdio: 'inherit',
-  env: { ...process.env }
-});
+// Forzar configuración de red IPv4
+process.env.N8N_DISABLE_PRODUCTION_MAIN_PROCESS = 'false';
+process.env.N8N_LOG_LEVEL = 'debug';
 
 console.log('✅ n8n process started');
 
-// Handle process termination
-process.on('SIGTERM', () => {
-  console.log('🛑 Received SIGTERM, shutting down...');
-  n8nProcess.kill('SIGTERM');
-});
-
-process.on('SIGINT', () => {
-  console.log('🛑 Received SIGINT, shutting down...');
-  n8nProcess.kill('SIGINT');
-});
-
-n8nProcess.on('exit', (code) => {
-  console.log(`⚠️ n8n process exited with code ${code}`);
-  process.exit(code);
-});
-
-n8nProcess.on('error', (err) => {
-  console.error('❌ Failed to start n8n:', err);
-  process.exit(1);
+exec('npx n8n start', { 
+  env: { ...process.env },
+  stdio: 'inherit'
 });
