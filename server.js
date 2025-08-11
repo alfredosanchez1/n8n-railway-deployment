@@ -2,7 +2,7 @@ const { spawn } = require('child_process');
 const http = require('http');
 
 // Configuración básica para Render
-const PORT = process.env.PORT || 5678;
+const PORT = process.env.PORT || 10000;
 
 // Configuración de n8n
 process.env.N8N_PORT = 5678;
@@ -32,7 +32,8 @@ const server = http.createServer((req, res) => {
       timestamp: new Date().toISOString(),
       port: PORT,
       database: 'sqlite',
-      n8n_port: 5678
+      n8n_port: 5678,
+      n8n_url: 'https://n8n-deployment-pp9i.onrender.com'
     }));
   } else {
     res.writeHead(404, { 'Content-Type': 'text/plain' });
