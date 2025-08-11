@@ -2,13 +2,14 @@ const { exec, spawn, execSync } = require('child_process');
 const http = require('http');
 
 // Instalar n8n explícitamente antes de iniciar
+console.log('🔧 Starting n8n installation...');
 try {
   console.log('🔧 Installing n8n...');
   execSync('npm install n8n@latest', { stdio: 'inherit' });
   console.log('✅ n8n installed successfully');
 } catch (error) {
   console.error('❌ Failed to install n8n:', error);
-  process.exit(1);
+  console.log('🔄 Continuing without n8n installation...');
 }
 
 // Configuración optimizada para Render sin base de datos externa
@@ -58,11 +59,13 @@ const server = http.createServer((req, res) => {
 });
 
 // Iniciar servidor HTTP en el puerto de Render
+console.log('🔧 Attempting to start HTTP server...');
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ HTTP server listening on port ${PORT}`);
   console.log('✅ n8n process starting...');
   
   // Iniciar n8n en background con configuración SQLite pura
+  console.log('🔧 Starting n8n process...');
   const n8nProcess = spawn('npx', ['n8n', 'start'], {
     stdio: 'inherit',
     env: { 
