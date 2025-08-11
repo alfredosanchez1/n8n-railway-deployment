@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: n8n-deployment
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20.19.0
+      - key: N8N_ENCRYPTION_KEY
+        generateValue: true
+      - key: N8N_DATABASE_TYPE
+        value: sqlite
+      - key: N8N_DATABASE_SQLITE_DATABASE
+        value: ":memory:"
