@@ -8,7 +8,8 @@ const PORT = process.env.PORT || 10000;
 process.env.N8N_PORT = 5678;
 process.env.N8N_HOST = '0.0.0.0';
 process.env.N8N_DATABASE_TYPE = 'sqlite';
-process.env.N8N_DATABASE_SQLITE_DATABASE = ':memory:';
+process.env.N8N_DATABASE_SQLITE_DATABASE = '/tmp/n8n-data/n8n.db';
+process.env.N8N_DATA_FOLDER = '/tmp/n8n-data';
 process.env.N8N_LOG_LEVEL = 'info';
 process.env.N8N_LISTEN_ADDRESS = '0.0.0.0';
 process.env.N8N_PROTOCOL = 'https';
@@ -19,6 +20,9 @@ process.env.N8N_EDITOR_BASE_URL = 'https://n8n-deployment-pp9i.onrender.com';
 console.log('🚀 RENDER: Starting n8n server...');
 console.log('📡 Server will run on port:', PORT);
 console.log('🔧 Environment configured for Render');
+console.log('🗄️ Database Type:', process.env.N8N_DATABASE_TYPE);
+console.log('🗄️ Database File:', process.env.N8N_DATABASE_SQLITE_DATABASE);
+console.log('🗄️ Data Folder:', process.env.N8N_DATA_FOLDER);
 
 // Crear servidor HTTP simple para healthcheck
 const server = http.createServer((req, res) => {
@@ -32,6 +36,8 @@ const server = http.createServer((req, res) => {
       timestamp: new Date().toISOString(),
       port: PORT,
       database: 'sqlite',
+      database_file: process.env.N8N_DATABASE_SQLITE_DATABASE,
+      data_folder: process.env.N8N_DATA_FOLDER,
       n8n_port: 5678,
       n8n_url: 'https://n8n-deployment-pp9i.onrender.com'
     }));
