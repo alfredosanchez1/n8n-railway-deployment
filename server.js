@@ -2,7 +2,7 @@ const { spawn } = require('child_process');
 const http = require('http');
 
 // Configuración básica para Render
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 5678;
 
 // Configuración de n8n
 process.env.N8N_PORT = 5678;
