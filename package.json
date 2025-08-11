@@ -8,7 +8,7 @@
     "build": "echo 'Build completed'"
   },
   "dependencies": {
-    "n8n": "latest"
+    "n8n": "1.90.0"
   },
   "engines": {
     "node": ">=18.0.0"
