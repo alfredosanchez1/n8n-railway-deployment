@@ -52,19 +52,14 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ HTTP server listening on port ${PORT}`);
   console.log('✅ n8n process starting...');
   
-  // Iniciar n8n en background con configuración IPv4 forzada
+  // Iniciar n8n en background con configuración SQLite pura
   const n8nProcess = spawn('npx', ['n8n', 'start'], {
     stdio: 'inherit',
     env: { 
       ...process.env,
       // Forzar IPv4 en el proceso hijo
-      NODE_OPTIONS: '--dns-result-order=ipv4first --max-old-space-size=4096',
-      // Variables específicas de PostgreSQL
-      PGHOST: process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).hostname : undefined,
-      PGPORT: process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).port : undefined,
-      PGUSER: process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).username : undefined,
-      PGPASSWORD: process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).password : undefined,
-      PGDATABASE: process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).pathname.slice(1) : undefined
+      NODE_OPTIONS: '--dns-result-order=ipv4first --max-old-space-size=4096'
+      // No más variables PostgreSQL - solo SQLite local
     }
   });
   
