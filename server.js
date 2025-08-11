@@ -15,8 +15,8 @@ process.env.N8N_LOG_LEVEL = 'error';
 process.env.N8N_DISABLE_UI = 'false';
 process.env.N8N_DISABLE_PRODUCTION_MAIN_PROCESS = 'false';
 
-const PORT = process.env.PORT || 10000; // HTTP server listens on 10000
-process.env.N8N_PORT = 5678; // n8n's internal port
+const PORT = process.env.PORT || 10000; // n8n usará este puerto directamente
+process.env.N8N_PORT = PORT; // n8n usará el mismo puerto que Render expone
 process.env.N8N_HOST = '0.0.0.0';
 process.env.N8N_LISTEN_ADDRESS = '0.0.0.0';
 process.env.N8N_PROTOCOL = 'https';
@@ -24,95 +24,9 @@ process.env.N8N_WEBHOOK_URL = 'https://n8n-deployment-pp9i.onrender.com';
 process.env.N8N_WEBHOOK_TEST_URL = 'https://n8n-deployment-pp9i.onrender.com';
 process.env.N8N_EDITOR_BASE_URL = 'https://n8n-deployment-pp9i.onrender.com';
 
-// Variable para controlar si n8n está listo
-let n8nReady = false;
-let n8nProcess = null;
-
-// Función para verificar si n8n está listo
-function checkN8nReady() {
-  return new Promise((resolve) => {
-    const req = http.request({
-      hostname: 'localhost',
-      port: 5678,
-      path: '/',
-      method: 'GET',
-      timeout: 1000
-    }, (res) => {
-      resolve(true);
-    });
-
-    req.on('error', () => {
-      resolve(false);
-    });
-
-    req.on('timeout', () => {
-      req.destroy();
-      resolve(false);
-    });
-
-    req.end();
-  });
-}
-
-// Función para hacer proxy a n8n
-function proxyToN8n(req, res) {
-  const proxyReq = http.request({
-    hostname: 'localhost',
-    port: 5678,
-    path: req.url,
-    method: req.method,
-    headers: req.headers
-  }, (proxyRes) => {
-    res.writeHead(proxyRes.statusCode, proxyRes.headers);
-    proxyRes.pipe(res);
-  });
-
-  req.pipe(proxyReq);
-
-  proxyReq.on('error', (err) => {
-    console.error('❌ Proxy error:', err);
-    res.writeHead(502, { 'Content-Type': 'text/plain' });
-    res.end('Bad Gateway - n8n not ready yet');
-  });
-}
-
-// Función para hacer proxy WebSocket a n8n
-function proxyWebSocketToN8n(req, socket, head) {
-  const proxyReq = http.request({
-    hostname: 'localhost',
-    port: 5678,
-    path: req.url,
-    method: req.method,
-    headers: req.headers
-  }, (proxyRes) => {
-    // Si es una respuesta de upgrade a WebSocket
-    if (proxyRes.statusCode === 101) {
-      socket.write('HTTP/1.1 101 Switching Protocols\r\n');
-      Object.keys(proxyRes.headers).forEach(key => {
-        socket.write(`${key}: ${proxyRes.headers[key]}\r\n`);
-      });
-      socket.write('\r\n');
-      
-      // Conectar los streams
-      proxyRes.pipe(socket);
-      socket.pipe(proxyRes);
-    } else {
-      // Si no es WebSocket, cerrar la conexión
-      socket.destroy();
-    }
-  });
-
-  proxyReq.on('error', (err) => {
-    console.error('❌ WebSocket proxy error:', err);
-    socket.destroy();
-  });
-
-  proxyReq.end();
-}
-
 // Agregar logging extensivo para debug
 console.log('🚀 RENDER: Starting n8n server...');
-console.log('📡 Server will run on port:', PORT);
+console.log('📡 n8n will run on port:', PORT);
 console.log('🔧 Environment configured for Render');
 console.log('🌐 DATABASE_URL:', process.env.DATABASE_URL);
 console.log('🔑 N8N_ENCRYPTION_KEY:', process.env.N8N_ENCRYPTION_KEY ? '✅ Set' : '❌ Missing');
@@ -121,11 +35,8 @@ console.log('📊 Database Type:', process.env.N8N_DATABASE_TYPE);
 console.log('🗄️ Database File:', process.env.N8N_DATABASE_SQLITE_DATABASE);
 console.log('🗄️ Data Folder:', process.env.N8N_DATA_FOLDER);
 
-// Crear servidor HTTP con proxy para n8n
-const server = http.createServer(async (req, res) => {
-  console.log(`📥 Request received: ${req.method} ${req.url}`);
-
-  // Si es una petición al health check, responder directamente
+// Crear servidor HTTP simple solo para health check
+const healthServer = http.createServer((req, res) => {
   if (req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
@@ -136,57 +47,22 @@ const server = http.createServer(async (req, res) => {
       database: process.env.N8N_DATABASE_TYPE || 'sqlite',
       database_file: process.env.N8N_DATABASE_SQLITE_DATABASE,
       data_folder: process.env.N8N_DATA_FOLDER,
-      n8n_port: 5678,
-      n8n_url: 'https://n8n-deployment-pp9i.onrender.com',
-      n8n_ready: n8nReady
+      n8n_port: PORT,
+      n8n_url: 'https://n8n-deployment-pp9i.onrender.com'
     }));
-    return;
+  } else {
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    res.end('Not Found');
   }
-
-  // Si n8n no está listo, mostrar mensaje de espera
-  if (!n8nReady) {
-    res.writeHead(503, { 'Content-Type': 'text/html' });
-    res.end(`
-      <html>
-        <head><title>n8n Starting...</title></head>
-        <body>
-          <h1>🚀 n8n is starting up...</h1>
-          <p>Please wait a moment while n8n initializes.</p>
-          <p>This page will automatically refresh every 5 seconds.</p>
-          <script>
-            setTimeout(() => window.location.reload(), 5000);
-          </script>
-        </body>
-      </html>
-    `);
-    return;
-  }
-
-  // Para todas las demás peticiones, redirigir a n8n en el puerto 5678
-  proxyToN8n(req, res);
 });
 
-// Manejar upgrade de WebSocket
-server.on('upgrade', (req, socket, head) => {
-  console.log(`🔌 WebSocket upgrade request: ${req.url}`);
-  
-  if (!n8nReady) {
-    console.log('❌ WebSocket rejected: n8n not ready yet');
-    socket.destroy();
-    return;
-  }
-
-  // Hacer proxy del WebSocket a n8n
-  proxyWebSocketToN8n(req, socket, head);
-});
-
-// Iniciar servidor HTTP en el puerto de Render
-console.log('🔧 Attempting to start HTTP server...');
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ HTTP server listening on port ${PORT}`);
+// Iniciar servidor de health check en un puerto diferente
+const HEALTH_PORT = 10001;
+healthServer.listen(HEALTH_PORT, '0.0.0.0', () => {
+  console.log(`✅ Health check server listening on port ${HEALTH_PORT}`);
   console.log('✅ n8n process starting...');
 
-  // Iniciar n8n en background con configuración SQLite pura
+  // Iniciar n8n directamente en el puerto principal
   console.log('🔧 Starting n8n process...');
   console.log('🔧 Environment variables for n8n:');
   console.log('   - N8N_DATABASE_TYPE:', process.env.N8N_DATABASE_TYPE);
@@ -196,7 +72,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('🔧 Starting n8n with command: npx n8n start');
   console.log('🔧 Working directory:', process.cwd());
 
-  n8nProcess = spawn('npx', ['n8n', 'start'], {
+  const n8nProcess = spawn('npx', ['n8n', 'start'], {
     stdio: 'inherit',
     env: {
       ...process.env,
@@ -219,7 +95,6 @@ server.listen(PORT, '0.0.0.0', () => {
       console.error('❌ n8n process failed with non-zero exit code');
       console.error('❌ This usually indicates a configuration or database error');
     }
-    n8nReady = false;
   });
 
   // Agregar logging para stdout y stderr
@@ -231,37 +106,28 @@ server.listen(PORT, '0.0.0.0', () => {
     console.error('📥 n8n stderr:', data.toString());
   });
 
-  // Verificar cuando n8n esté listo
-  const checkInterval = setInterval(async () => {
-    if (await checkN8nReady()) {
-      console.log('✅ n8n is now ready and accepting connections!');
-      n8nReady = true;
-      clearInterval(checkInterval);
-    }
-  }, 2000); // Verificar cada 2 segundos
-
   // Manejar señales de terminación
   process.on('SIGTERM', () => {
     console.log('🛑 Received SIGTERM, shutting down...');
-    if (n8nProcess) n8nProcess.kill('SIGTERM');
-    server.close(() => {
-      console.log('✅ HTTP server closed');
+    n8nProcess.kill('SIGTERM');
+    healthServer.close(() => {
+      console.log('✅ Health server closed');
       process.exit(0);
     });
   });
 
   process.on('SIGINT', () => {
     console.log('🛑 Received SIGINT, shutting down...');
-    if (n8nProcess) n8nProcess.kill('SIGINT');
-    server.close(() => {
-      console.log('✅ HTTP server closed');
+    n8nProcess.kill('SIGINT');
+    healthServer.close(() => {
+      console.log('✅ Health server closed');
       process.exit(0);
     });
   });
 });
 
-// Manejar errores del servidor
-server.on('error', (err) => {
-  console.error('❌ HTTP server error:', err);
+// Manejar errores del servidor de health check
+healthServer.on('error', (err) => {
+  console.error('❌ Health server error:', err);
   process.exit(1);
 });
