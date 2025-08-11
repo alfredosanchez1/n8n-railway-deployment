@@ -38,7 +38,7 @@ const server = http.createServer((req, res) => {
       service: 'n8n', 
       timestamp: new Date().toISOString(),
       port: PORT,
-      database: 'railway',
+              database: process.env.N8N_DATABASE_TYPE || 'sqlite',
       ipv4_forced: true
     }));
   } else {
