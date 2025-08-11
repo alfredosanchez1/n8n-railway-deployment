@@ -8,10 +8,10 @@
     "build": "echo 'Build completed'"
   },
   "dependencies": {
-    "n8n": "1.90.0"
+    "n8n": "latest"
   },
   "engines": {
-    "node": "20.19.0"
+    "node": ">=18.0.0"
   },
   "keywords": ["n8n", "automation", "workflow"],
   "author": "",

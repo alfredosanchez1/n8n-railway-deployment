@@ -1,11 +1,8 @@
 const { exec, spawn } = require('child_process');
 const http = require('http');
 
-// Configuración optimizada para Render - usar npx sin instalación
-console.log('🚀 RENDER: Starting n8n server with npx optimization...');
-
 // Configuración optimizada para Render sin base de datos externa
-process.env.NODE_OPTIONS = '--dns-result-order=ipv4first --max-old-space-size=256';
+process.env.NODE_OPTIONS = '--dns-result-order=ipv4first --max-old-space-size=512';
 process.env.NODE_NO_WARNINGS = '1';
 
 // Configuración para SQLite local (sin persistencia)
@@ -41,7 +38,7 @@ const server = http.createServer((req, res) => {
       service: 'n8n', 
       timestamp: new Date().toISOString(),
       port: PORT,
-              database: process.env.N8N_DATABASE_TYPE || 'sqlite',
+      database: 'railway',
       ipv4_forced: true
     }));
   } else {
@@ -51,53 +48,33 @@ const server = http.createServer((req, res) => {
 });
 
 // Iniciar servidor HTTP en el puerto de Render
-console.log('🔧 Attempting to start HTTP server...');
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ HTTP server listening on port ${PORT}`);
   console.log('✅ n8n process starting...');
   
-  // Iniciar n8n en background con configuración SQLite pura
-  console.log('🔧 Starting n8n process...');
-  console.log('🔧 Environment variables for n8n:');
-  console.log('   - N8N_DATABASE_TYPE:', process.env.N8N_DATABASE_TYPE);
-  console.log('   - N8N_DATABASE_SQLITE_DATABASE:', process.env.N8N_DATABASE_SQLITE_DATABASE);
-  console.log('   - N8N_DATA_FOLDER:', process.env.N8N_DATA_FOLDER);
-  console.log('   - N8N_LOG_LEVEL:', process.env.N8N_LOG_LEVEL);
-  console.log('🔧 Starting n8n with command: npx n8n start');
-  console.log('🔧 Working directory:', process.cwd());
-  
+  // Iniciar n8n en background con configuración IPv4 forzada
   const n8nProcess = spawn('npx', ['n8n', 'start'], {
     stdio: 'inherit',
     env: { 
       ...process.env,
-      // Forzar IPv4 en el proceso hijo con memoria optimizada
-      NODE_OPTIONS: '--dns-result-order=ipv4first --max-old-space-size=256'
-      // No más variables PostgreSQL - solo SQLite local
+      // Forzar IPv4 en el proceso hijo
+      NODE_OPTIONS: '--dns-result-order=ipv4first --max-old-space-size=4096',
+      // Variables específicas de PostgreSQL
+      PGHOST: process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).hostname : undefined,
+      PGPORT: process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).port : undefined,
+      PGUSER: process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).username : undefined,
+      PGPASSWORD: process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).password : undefined,
+      PGDATABASE: process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).pathname.slice(1) : undefined
     }
   });
   
   // Manejar eventos del proceso n8n
   n8nProcess.on('error', (err) => {
     console.error('❌ Failed to start n8n:', err);
-    console.error('❌ Error details:', err.message);
-    console.error('❌ Error stack:', err.stack);
   });
   
   n8nProcess.on('exit', (code, signal) => {
     console.log(`⚠️ n8n process exited with code ${code}, signal ${signal}`);
-    if (code !== 0) {
-      console.error('❌ n8n process failed with non-zero exit code');
-      console.error('❌ This usually indicates a configuration or database error');
-    }
-  });
-  
-  // Agregar logging para stdout y stderr
-  n8nProcess.stdout?.on('data', (data) => {
-    console.log('📤 n8n stdout:', data.toString());
-  });
-  
-  n8nProcess.stderr?.on('data', (data) => {
-    console.error('📥 n8n stderr:', data.toString());
   });
   
   // Manejar señales de terminación
