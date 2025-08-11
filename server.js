@@ -43,9 +43,9 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('✅ n8n process starting...');
   
   // Iniciar n8n
-  console.log('🔧 Starting n8n with command: npx n8n start');
+  console.log('🔧 Starting n8n with command: npx n8n start --host 0.0.0.0 --port 5678');
   
-  const n8nProcess = spawn('npx', ['n8n', 'start'], {
+  const n8nProcess = spawn('npx', ['n8n', 'start', '--host', '0.0.0.0', '--port', '5678'], {
     stdio: 'inherit',
     env: { 
       ...process.env,
