@@ -1,13 +1,18 @@
 const { exec, spawn } = require('child_process');
 const http = require('http');
 
-// Forzar IPv4 más agresivamente para evitar problemas de conexión
-process.env.NODE_OPTIONS = '--dns-result-order=ipv4first';
+// Configuración optimizada para Render sin base de datos externa
+process.env.NODE_OPTIONS = '--dns-result-order=ipv4first --max-old-space-size=512';
 process.env.NODE_NO_WARNINGS = '1';
 
-// Variables específicas para forzar IPv4 en conexiones de base de datos
-process.env.PGSSLMODE = 'require';
-process.env.PGAPPNAME = 'n8n-render';
+// Configuración para SQLite local (sin persistencia)
+process.env.N8N_DATABASE_TYPE = 'sqlite';
+process.env.N8N_DATABASE_SQLITE_DATABASE = ':memory:';
+
+// Optimizaciones de memoria
+process.env.N8N_LOG_LEVEL = 'error';
+process.env.N8N_DISABLE_UI = 'false';
+process.env.N8N_DISABLE_PRODUCTION_MAIN_PROCESS = 'false';
 
 const PORT = process.env.PORT || 10000;
 process.env.N8N_PORT = PORT;
@@ -20,12 +25,7 @@ console.log('🔧 Environment configured for Render');
 console.log('🌐 DATABASE_URL:', process.env.DATABASE_URL);
 console.log('🔑 N8N_ENCRYPTION_KEY:', process.env.N8N_ENCRYPTION_KEY ? '✅ Set' : '❌ Missing');
 console.log('🌍 NODE_OPTIONS:', process.env.NODE_OPTIONS);
-console.log('🔒 PGSSLMODE:', process.env.PGSSLMODE);
-
-// Forzar configuración de red IPv4 y base de datos
-process.env.N8N_DISABLE_PRODUCTION_MAIN_PROCESS = 'false';
-process.env.N8N_LOG_LEVEL = 'debug';
-process.env.N8N_DATABASE_TYPE = 'postgresdb';
+console.log('📊 Database Type:', process.env.N8N_DATABASE_TYPE);
 
 // Crear servidor HTTP simple para mantener el proceso activo
 const server = http.createServer((req, res) => {
