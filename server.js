@@ -1,5 +1,15 @@
-const { exec, spawn } = require('child_process');
+const { exec, spawn, execSync } = require('child_process');
 const http = require('http');
+
+// Instalar n8n explícitamente antes de iniciar
+try {
+  console.log('🔧 Installing n8n...');
+  execSync('npm install n8n@latest', { stdio: 'inherit' });
+  console.log('✅ n8n installed successfully');
+} catch (error) {
+  console.error('❌ Failed to install n8n:', error);
+  process.exit(1);
+}
 
 // Configuración optimizada para Render sin base de datos externa
 process.env.NODE_OPTIONS = '--dns-result-order=ipv4first --max-old-space-size=512';

@@ -42,7 +42,7 @@ En Railway, necesitas configurar las siguientes variables de entorno:
    - Asegúrate de generar una clave de encriptación segura
 
 4. **Desplegar:**
-   - Railway detectará automáticamente que es un proyecto Node.js
+   - Railway detectará automáticamente que es un proyecto git pushNode.js
    - El despliegue comenzará automáticamente
    - Una vez completado, tendrás tu URL de n8n
 
