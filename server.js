@@ -1,19 +1,11 @@
-const { exec, spawn, execSync } = require('child_process');
+const { exec, spawn } = require('child_process');
 const http = require('http');
 
-// Instalar n8n explícitamente antes de iniciar
-console.log('🔧 Starting n8n installation...');
-try {
-  console.log('🔧 Installing n8n...');
-  execSync('npm install n8n@latest', { stdio: 'inherit' });
-  console.log('✅ n8n installed successfully');
-} catch (error) {
-  console.error('❌ Failed to install n8n:', error);
-  console.log('🔄 Continuing without n8n installation...');
-}
+// Configuración optimizada para Render - usar npx sin instalación
+console.log('🚀 RENDER: Starting n8n server with npx optimization...');
 
 // Configuración optimizada para Render sin base de datos externa
-process.env.NODE_OPTIONS = '--dns-result-order=ipv4first --max-old-space-size=512';
+process.env.NODE_OPTIONS = '--dns-result-order=ipv4first --max-old-space-size=256';
 process.env.NODE_NO_WARNINGS = '1';
 
 // Configuración para SQLite local (sin persistencia)
@@ -70,8 +62,8 @@ server.listen(PORT, '0.0.0.0', () => {
     stdio: 'inherit',
     env: { 
       ...process.env,
-      // Forzar IPv4 en el proceso hijo
-      NODE_OPTIONS: '--dns-result-order=ipv4first --max-old-space-size=4096'
+      // Forzar IPv4 en el proceso hijo con memoria optimizada
+      NODE_OPTIONS: '--dns-result-order=ipv4first --max-old-space-size=256'
       // No más variables PostgreSQL - solo SQLite local
     }
   });
