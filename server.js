@@ -10,6 +10,8 @@ process.env.N8N_HOST = '0.0.0.0';
 process.env.N8N_DATABASE_TYPE = 'sqlite';
 process.env.N8N_DATABASE_SQLITE_DATABASE = ':memory:';
 process.env.N8N_LOG_LEVEL = 'info';
+process.env.N8N_LISTEN_ADDRESS = '0.0.0.0';
+process.env.N8N_PROTOCOL = 'https';
 
 console.log('🚀 RENDER: Starting n8n server...');
 console.log('📡 Server will run on port:', PORT);
@@ -45,7 +47,15 @@ server.listen(PORT, '0.0.0.0', () => {
   
   const n8nProcess = spawn('npx', ['n8n', 'start'], {
     stdio: 'inherit',
-    env: { ...process.env }
+    env: { 
+      ...process.env,
+      N8N_HOST: '0.0.0.0',
+      N8N_PORT: '5678',
+      N8N_LISTEN_ADDRESS: '0.0.0.0',
+      N8N_PROTOCOL: 'https',
+      N8N_WEBHOOK_URL: `https://n8n-deployment-pp9i.onrender.com`,
+      N8N_WEBHOOK_TEST_URL: `https://n8n-deployment-pp9i.onrender.com`
+    }
   });
   
   // Manejar eventos del proceso n8n
