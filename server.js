@@ -76,6 +76,40 @@ function proxyToN8n(req, res) {
   });
 }
 
+// Función para hacer proxy WebSocket a n8n
+function proxyWebSocketToN8n(req, socket, head) {
+  const proxyReq = http.request({
+    hostname: 'localhost',
+    port: 5678,
+    path: req.url,
+    method: req.method,
+    headers: req.headers
+  }, (proxyRes) => {
+    // Si es una respuesta de upgrade a WebSocket
+    if (proxyRes.statusCode === 101) {
+      socket.write('HTTP/1.1 101 Switching Protocols\r\n');
+      Object.keys(proxyRes.headers).forEach(key => {
+        socket.write(`${key}: ${proxyRes.headers[key]}\r\n`);
+      });
+      socket.write('\r\n');
+      
+      // Conectar los streams
+      proxyRes.pipe(socket);
+      socket.pipe(proxyRes);
+    } else {
+      // Si no es WebSocket, cerrar la conexión
+      socket.destroy();
+    }
+  });
+
+  proxyReq.on('error', (err) => {
+    console.error('❌ WebSocket proxy error:', err);
+    socket.destroy();
+  });
+
+  proxyReq.end();
+}
+
 // Agregar logging extensivo para debug
 console.log('🚀 RENDER: Starting n8n server...');
 console.log('📡 Server will run on port:', PORT);
@@ -130,6 +164,20 @@ const server = http.createServer(async (req, res) => {
 
   // Para todas las demás peticiones, redirigir a n8n en el puerto 5678
   proxyToN8n(req, res);
+});
+
+// Manejar upgrade de WebSocket
+server.on('upgrade', (req, socket, head) => {
+  console.log(`🔌 WebSocket upgrade request: ${req.url}`);
+  
+  if (!n8nReady) {
+    console.log('❌ WebSocket rejected: n8n not ready yet');
+    socket.destroy();
+    return;
+  }
+
+  // Hacer proxy del WebSocket a n8n
+  proxyWebSocketToN8n(req, socket, head);
 });
 
 // Iniciar servidor HTTP en el puerto de Render
