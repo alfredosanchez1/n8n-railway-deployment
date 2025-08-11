@@ -58,6 +58,14 @@ server.listen(PORT, '0.0.0.0', () => {
   
   // Iniciar n8n en background con configuración SQLite pura
   console.log('🔧 Starting n8n process...');
+  console.log('🔧 Environment variables for n8n:');
+  console.log('   - N8N_DATABASE_TYPE:', process.env.N8N_DATABASE_TYPE);
+  console.log('   - N8N_DATABASE_SQLITE_DATABASE:', process.env.N8N_DATABASE_SQLITE_DATABASE);
+  console.log('   - N8N_DATA_FOLDER:', process.env.N8N_DATA_FOLDER);
+  console.log('   - N8N_LOG_LEVEL:', process.env.N8N_LOG_LEVEL);
+  console.log('🔧 Starting n8n with command: npx n8n start');
+  console.log('🔧 Working directory:', process.cwd());
+  
   const n8nProcess = spawn('npx', ['n8n', 'start'], {
     stdio: 'inherit',
     env: { 
@@ -71,10 +79,25 @@ server.listen(PORT, '0.0.0.0', () => {
   // Manejar eventos del proceso n8n
   n8nProcess.on('error', (err) => {
     console.error('❌ Failed to start n8n:', err);
+    console.error('❌ Error details:', err.message);
+    console.error('❌ Error stack:', err.stack);
   });
   
   n8nProcess.on('exit', (code, signal) => {
     console.log(`⚠️ n8n process exited with code ${code}, signal ${signal}`);
+    if (code !== 0) {
+      console.error('❌ n8n process failed with non-zero exit code');
+      console.error('❌ This usually indicates a configuration or database error');
+    }
+  });
+  
+  // Agregar logging para stdout y stderr
+  n8nProcess.stdout?.on('data', (data) => {
+    console.log('📤 n8n stdout:', data.toString());
+  });
+  
+  n8nProcess.stderr?.on('data', (data) => {
+    console.error('📥 n8n stderr:', data.toString());
   });
   
   // Manejar señales de terminación
