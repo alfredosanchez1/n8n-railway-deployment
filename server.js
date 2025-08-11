@@ -1,33 +1,21 @@
-const { exec, spawn } = require('child_process');
+const { spawn } = require('child_process');
 const http = require('http');
 
-// Configuración optimizada para Render sin base de datos externa
-process.env.NODE_OPTIONS = '--dns-result-order=ipv4first --max-old-space-size=512';
-process.env.NODE_NO_WARNINGS = '1';
+// Configuración básica para Render
+const PORT = process.env.PORT || 10000;
 
-// Configuración para SQLite local (sin persistencia)
+// Configuración de n8n
+process.env.N8N_PORT = 5678;
+process.env.N8N_HOST = '0.0.0.0';
 process.env.N8N_DATABASE_TYPE = 'sqlite';
 process.env.N8N_DATABASE_SQLITE_DATABASE = ':memory:';
+process.env.N8N_LOG_LEVEL = 'info';
 
-// Optimizaciones de memoria
-process.env.N8N_LOG_LEVEL = 'error';
-process.env.N8N_DISABLE_UI = 'false';
-process.env.N8N_DISABLE_PRODUCTION_MAIN_PROCESS = 'false';
-
-const PORT = process.env.PORT || 10000;
-process.env.N8N_PORT = PORT;
-process.env.N8N_HOST = '0.0.0.0';
-
-// Agregar logging extensivo para debug
 console.log('🚀 RENDER: Starting n8n server...');
 console.log('📡 Server will run on port:', PORT);
 console.log('🔧 Environment configured for Render');
-console.log('🌐 DATABASE_URL:', process.env.DATABASE_URL);
-console.log('🔑 N8N_ENCRYPTION_KEY:', process.env.N8N_ENCRYPTION_KEY ? '✅ Set' : '❌ Missing');
-console.log('🌍 NODE_OPTIONS:', process.env.NODE_OPTIONS);
-console.log('📊 Database Type:', process.env.N8N_DATABASE_TYPE);
 
-// Crear servidor HTTP simple para mantener el proceso activo
+// Crear servidor HTTP simple para healthcheck
 const server = http.createServer((req, res) => {
   console.log(`📥 Request received: ${req.method} ${req.url}`);
   
@@ -38,8 +26,8 @@ const server = http.createServer((req, res) => {
       service: 'n8n', 
       timestamp: new Date().toISOString(),
       port: PORT,
-      database: 'railway',
-      ipv4_forced: true
+      database: 'sqlite',
+      n8n_port: 5678
     }));
   } else {
     res.writeHead(404, { 'Content-Type': 'text/plain' });
@@ -47,25 +35,17 @@ const server = http.createServer((req, res) => {
   }
 });
 
-// Iniciar servidor HTTP en el puerto de Render
+// Iniciar servidor HTTP
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ HTTP server listening on port ${PORT}`);
   console.log('✅ n8n process starting...');
   
-  // Iniciar n8n en background con configuración IPv4 forzada
+  // Iniciar n8n
+  console.log('🔧 Starting n8n with command: npx n8n start');
+  
   const n8nProcess = spawn('npx', ['n8n', 'start'], {
     stdio: 'inherit',
-    env: { 
-      ...process.env,
-      // Forzar IPv4 en el proceso hijo
-      NODE_OPTIONS: '--dns-result-order=ipv4first --max-old-space-size=4096',
-      // Variables específicas de PostgreSQL
-      PGHOST: process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).hostname : undefined,
-      PGPORT: process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).port : undefined,
-      PGUSER: process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).username : undefined,
-      PGPASSWORD: process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).password : undefined,
-      PGDATABASE: process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).pathname.slice(1) : undefined
-    }
+    env: { ...process.env }
   });
   
   // Manejar eventos del proceso n8n
@@ -75,6 +55,9 @@ server.listen(PORT, '0.0.0.0', () => {
   
   n8nProcess.on('exit', (code, signal) => {
     console.log(`⚠️ n8n process exited with code ${code}, signal ${signal}`);
+    if (code !== 0) {
+      console.error('❌ n8n process failed with non-zero exit code');
+    }
   });
   
   // Manejar señales de terminación
