@@ -13,4 +13,6 @@ services:
       - key: N8N_DATABASE_TYPE
         value: sqlite
       - key: N8N_DATABASE_SQLITE_DATABASE
-        value: ":memory:"
+        value: "/tmp/n8n-data/n8n.db"
+      - key: N8N_DATA_FOLDER
+        value: "/tmp/n8n-data"
