@@ -1,16 +1,15 @@
 const { spawn } = require('child_process');
 
-// Configuración optimizada para Render sin base de datos externa
+// Configuración optimizada para Render CON PERSISTENCIA REAL
 process.env.NODE_OPTIONS = '--dns-result-order=ipv4first --max-old-space-size=512';
 process.env.NODE_NO_WARNINGS = '1';
 
-// Configuración para SQLite local (sin persistencia)
-process.env.N8N_DATABASE_TYPE = 'sqlite';
-process.env.N8N_DATABASE_SQLITE_DATABASE = '/tmp/n8n-data/n8n.db';
-process.env.N8N_DATA_FOLDER = '/tmp/n8n-data';
+// Configuración para PostgreSQL con persistencia REAL
+process.env.N8N_DATABASE_TYPE = 'postgresdb';
+// Las variables de PostgreSQL se configuran automáticamente desde render.yaml
 
 // Optimizaciones de memoria
-process.env.N8N_LOG_LEVEL = 'error';
+process.env.N8N_LOG_LEVEL = 'info';
 process.env.N8N_DISABLE_UI = 'false';
 process.env.N8N_DISABLE_PRODUCTION_MAIN_PROCESS = 'false';
 
@@ -24,22 +23,19 @@ process.env.N8N_WEBHOOK_TEST_URL = 'https://n8n-deployment-pp9i.onrender.com';
 process.env.N8N_EDITOR_BASE_URL = 'https://n8n-deployment-pp9i.onrender.com';
 
 // Agregar logging extensivo para debug
-console.log('🚀 RENDER: Starting n8n server...');
+console.log('🚀 RENDER: Starting n8n server WITH PERSISTENCE...');
 console.log('📡 n8n will run on port:', PORT);
-console.log('🔧 Environment configured for Render');
+console.log('🔧 Environment configured for Render with PostgreSQL');
 console.log('🌐 DATABASE_URL:', process.env.DATABASE_URL);
 console.log('🔑 N8N_ENCRYPTION_KEY:', process.env.N8N_ENCRYPTION_KEY ? '✅ Set' : '❌ Missing');
 console.log('🌍 NODE_OPTIONS:', process.env.NODE_OPTIONS);
 console.log('📊 Database Type:', process.env.N8N_DATABASE_TYPE);
-console.log('🗄️ Database File:', process.env.N8N_DATABASE_SQLITE_DATABASE);
-console.log('🗄️ Data Folder:', process.env.N8N_DATA_FOLDER);
+console.log('🗄️ PostgreSQL configured for REAL PERSISTENCE');
 
 // Iniciar n8n directamente
-console.log('🔧 Starting n8n process...');
+console.log('🔧 Starting n8n process with PostgreSQL...');
 console.log('🔧 Environment variables for n8n:');
 console.log('   - N8N_DATABASE_TYPE:', process.env.N8N_DATABASE_TYPE);
-console.log('   - N8N_DATABASE_SQLITE_DATABASE:', process.env.N8N_DATABASE_SQLITE_DATABASE);
-console.log('   - N8N_DATA_FOLDER:', process.env.N8N_DATA_FOLDER);
 console.log('   - N8N_LOG_LEVEL:', process.env.N8N_LOG_LEVEL);
 console.log('🔧 Starting n8n with command: npx n8n start');
 console.log('🔧 Working directory:', process.cwd());
@@ -50,7 +46,6 @@ const n8nProcess = spawn('npx', ['n8n', 'start'], {
     ...process.env,
     // Forzar IPv4 en el proceso hijo con memoria optimizada
     NODE_OPTIONS: '--dns-result-order=ipv4first --max-old-space-size=256'
-    // No más variables PostgreSQL - solo SQLite local
   }
 });
 

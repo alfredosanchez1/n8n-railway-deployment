@@ -2,17 +2,52 @@ services:
   - type: web
     name: n8n-deployment
     env: node
+    plan: starter
     buildCommand: npm install
     startCommand: npm start
-    port: 10000
     envVars:
-      - key: NODE_VERSION
-        value: 20.19.0
       - key: N8N_ENCRYPTION_KEY
         generateValue: true
       - key: N8N_DATABASE_TYPE
-        value: sqlite
-      - key: N8N_DATABASE_SQLITE_DATABASE
-        value: "/tmp/n8n-data/n8n.db"
-      - key: N8N_DATA_FOLDER
-        value: "/tmp/n8n-data"
+        value: postgresdb
+      - key: N8N_DATABASE_POSTGRESDB_HOST
+        fromDatabase:
+          name: n8n-database
+          property: host
+      - key: N8N_DATABASE_POSTGRESDB_PORT
+        fromDatabase:
+          name: n8n-database
+          property: port
+      - key: N8N_DATABASE_POSTGRESDB_DATABASE
+        fromDatabase:
+          name: n8n-database
+          property: database
+      - key: N8N_DATABASE_POSTGRESDB_USER
+        fromDatabase:
+          name: n8n-database
+          property: username
+      - key: N8N_DATABASE_POSTGRESDB_PASSWORD
+        fromDatabase:
+          name: n8n-database
+          property: password
+      - key: N8N_WEBHOOK_URL
+        value: https://n8n-deployment-pp9i.onrender.com
+      - key: N8N_EDITOR_BASE_URL
+        value: https://n8n-deployment-pp9i.onrender.com
+      - key: N8N_PROTOCOL
+        value: https
+      - key: N8N_HOST
+        value: 0.0.0.0
+      - key: N8N_PORT
+        value: 10000
+      - key: N8N_LOG_LEVEL
+        value: info
+      - key: NODE_OPTIONS
+        value: --dns-result-order=ipv4first --max-old-space-size=512
+    healthCheckPath: /rest/health
+
+databases:
+  - name: n8n-database
+    databaseName: n8n
+    user: n8n
+    plan: starter
